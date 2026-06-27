@@ -258,7 +258,7 @@ def fetch_filing_text(cik: str, accession_no: str) -> tuple[str, str]:
 
 # ── Claude ────────────────────────────────────────────────────────────────────
 
-EXTRACTION_PROMPT = """You are a senior analyst reading one SEC filing. Your job is to flag only what matters to an investor — not summarize the document.
+EXTRACTION_PROMPT = """You are a senior analyst reading one SEC filing. Your job is to flag only what matters to an investor -- not summarize the document.
 
 Think like a highlighter, not a transcriber. If something is routine, boilerplate, or already well-known, skip it.
 
@@ -279,7 +279,7 @@ Return ONLY valid JSON, no markdown, no preamble:
       "ticker": "string or null",
       "is_private": true,
       "relation": "customer|partner|competitor|investor|vendor|acquirer",
-      "context": "one sentence — why this relationship matters"
+      "context": "one sentence -- why this relationship matters"
     }}
   ],
   "insider_transactions": [
@@ -298,10 +298,10 @@ Return ONLY valid JSON, no markdown, no preamble:
     {{
       "event_type": "string",
       "summary": "one sentence max",
-      "significance": "one sentence — investment angle only"
+      "significance": "one sentence -- investment angle only"
     }}
   ],
-  "risk_signals": ["Max 5. Only new, specific, or elevated risks — skip standard boilerplate"],
+  "risk_signals": ["Max 5. Only new, specific, or elevated risks -- skip standard boilerplate"],
   "positive_signals": ["Max 5. Only concrete positives with evidence"],
   "financial_highlights": ["Max 5. Actual numbers: revenue, margins, cash, guidance"],
   "management_language": "one word + one sentence evidence"
@@ -313,7 +313,7 @@ Hard rules:
 - key_facts: ALWAYS capture dollar amounts. EXCLUDE auditor changes, equity plan setup, routine governance.
 - positive_signals: commercial traction only. NOT auditor upgrades or compensation setup.
 - If nothing notable in a category, return empty array
-- Total response must be concise — quality over quantity"""
+- Total response must be concise -- quality over quantity"""
 
 
 SYNTHESIS_PROMPT = """You are a senior investment analyst writing a concise brief for a sophisticated investor.
@@ -333,12 +333,12 @@ Return ONLY valid JSON, no markdown, no preamble.
     "sub_sector": "string",
     "status": "public|private|pre-ipo",
     "stage": "string",
-    "one_liner": "one sentence — what this company does, for whom, and why it matters"
+    "one_liner": "one sentence -- what this company does, for whom, and why it matters"
   }},
   "growth_insights": [
     {{
       "headline": "6-8 words",
-      "detail": "2-3 sentences. Commercial signals only — contract wins with $ values, government grants with $ values, new partnerships, new markets, product launches, technology milestones. NEVER: auditor changes, equity plan setup, SPAC governance, advisory fees, admin."
+      "detail": "2-3 sentences. Commercial signals only -- contract wins with $ values, government grants with $ values, new partnerships, new markets, product launches, technology milestones. NEVER: auditor changes, equity plan setup, SPAC governance, advisory fees, admin."
     }}
   ],
   "key_relationships": [
@@ -350,11 +350,11 @@ Return ONLY valid JSON, no markdown, no preamble.
       "one_liner": "one sentence on what this relationship means for the investment thesis"
     }}
   ],
-  "insider_activity": ["FIRST STRING: verdict starting with 'Net signal: [strongly bearish/bearish/neutral/bullish]' — pattern summary. Then 3-4 more strings: crisp bullets — name, action, dollar amount, discretionary or not, one-line significance. 5 strings max total."],
+  "insider_activity": ["FIRST STRING: verdict starting with Net signal: [strongly bearish/bearish/neutral/bullish] -- pattern summary. Then 3-4 more strings: crisp bullets -- name, action, dollar amount, discretionary or not, one-line significance. 5 strings max total."],
   "buying_appetite": {{
     "rating": "strong|moderate|weak|insufficient_data",
     "score": 0,
-    "verdict": "one punchy sentence — the bottom line based on everything in the filings"
+    "verdict": "one punchy sentence -- the bottom line based on everything in the filings"
   }}
 }}
 
@@ -386,7 +386,6 @@ def extract_filing(filing: dict, text: str, company: dict) -> dict:
         try:
             return json.loads(raw)
         except json.JSONDecodeError:
-            # Try salvaging truncated JSON
             last_brace = raw.rfind("}")
             if last_brace > 0:
                 try:
@@ -468,7 +467,6 @@ def render_brief(result: dict, company: dict, filing_count: int, form_types: str
     header = result.get("header", {})
     ticker = header.get("ticker") or company.get("ticker") or ""
 
-    # 1. Header
     ticker_html = '<span style="color:#3b82f6;font-size:20px;margin-left:10px">' + ticker + '</span>' if ticker else ""
     st.markdown(
         '<div style="padding:28px 0 20px 0">'
@@ -489,7 +487,6 @@ def render_brief(result: dict, company: dict, filing_count: int, form_types: str
 
     divider()
 
-    # 2. Growth Insights
     insights = result.get("growth_insights", [])
     if insights:
         section_label("Growth Insights")
@@ -504,7 +501,6 @@ def render_brief(result: dict, company: dict, filing_count: int, form_types: str
 
     divider()
 
-    # 3. Key Relationships
     relationships = result.get("key_relationships", [])
     if relationships:
         section_label("Key Relationships")
@@ -538,7 +534,6 @@ def render_brief(result: dict, company: dict, filing_count: int, form_types: str
 
     divider()
 
-    # 4. Insider Activity
     insider = result.get("insider_activity", [])
     if insider:
         section_label("Insider Activity")
@@ -546,7 +541,7 @@ def render_brief(result: dict, company: dict, filing_count: int, form_types: str
         for bullet in items:
             st.markdown(
                 '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #0d1526">'
-                '<span style="color:#334155;flex-shrink:0;margin-top:2px">—</span>'
+                '<span style="color:#334155;flex-shrink:0;margin-top:2px">--</span>'
                 '<span style="color:#94a3b8;font-size:13px;line-height:1.6">' + str(bullet) + '</span>'
                 '</div>',
                 unsafe_allow_html=True
@@ -554,7 +549,6 @@ def render_brief(result: dict, company: dict, filing_count: int, form_types: str
 
     divider()
 
-    # 5. Buying Appetite
     appetite = result.get("buying_appetite", {})
     rating = appetite.get("rating", "insufficient_data")
     score = appetite.get("score", 0)
@@ -590,7 +584,6 @@ def build_txt(result: dict, company: dict, start_str: str, end_str: str, form_ty
         "",
     ]
 
-    # Header
     header = result.get("header", {})
     if header:
         lines += [sep, "COMPANY", sep]
@@ -598,16 +591,14 @@ def build_txt(result: dict, company: dict, start_str: str, end_str: str, form_ty
         lines.append(header.get("one_liner", ""))
         lines.append("")
 
-    # Growth Insights
     insights = result.get("growth_insights", [])
     if insights:
         lines += [sep, "GROWTH INSIGHTS", sep]
         for ins in insights:
-            lines.append("▸ " + ins.get("headline", ""))
-            lines.append("  " + ins.get("detail", ""))
+            lines.append(">> " + ins.get("headline", ""))
+            lines.append("   " + ins.get("detail", ""))
             lines.append("")
 
-    # Key Relationships
     relationships = result.get("key_relationships", [])
     if relationships:
         lines += [sep, "KEY RELATIONSHIPS", sep]
@@ -615,20 +606,18 @@ def build_txt(result: dict, company: dict, start_str: str, end_str: str, form_ty
             ticker_co = co.get("ticker") or ""
             is_private = co.get("is_private", False)
             label = "[PRIVATE]" if is_private else ("[" + ticker_co + "]" if ticker_co else "")
-            lines.append((label + " " if label else "") + co.get("name", "") + "  —  " + co.get("role", "").upper())
-            lines.append("  " + co.get("one_liner", ""))
+            lines.append((label + " " if label else "") + co.get("name", "") + "  --  " + co.get("role", "").upper())
+            lines.append("   " + co.get("one_liner", ""))
             lines.append("")
 
-    # Insider Activity
     insider = result.get("insider_activity", [])
     if insider:
         lines += [sep, "INSIDER ACTIVITY", sep]
         items = insider if isinstance(insider, list) else [insider]
         for bullet in items:
-            lines.append("• " + str(bullet))
+            lines.append("* " + str(bullet))
         lines.append("")
 
-    # Buying Appetite
     appetite = result.get("buying_appetite", {})
     if appetite:
         rating = appetite.get("rating", "").upper()
@@ -648,8 +637,9 @@ def main():
     st.markdown("# 📡 proximetr")
     st.markdown('<p style="color:#475569;margin-top:-12px;margin-bottom:24px">Full-document EDGAR scanner + Claude synthesis</p>', unsafe_allow_html=True)
 
-    # CIK input — auto-lookup on entry
-    cik_input = st.text_input("", placeholder="CIK  (find at sec.gov/cgi-bin/browse-edgar)", label_visibility="collapsed")
+    # CIK input
+    cik_input = st.text_input("", placeholder="Enter company CIK number", label_visibility="collapsed")
+    st.caption("Tickers aren't unique and private companies don't have them — we use the CIK, the SEC's permanent ID for every filer. [Find it on EDGAR](https://www.sec.gov/edgar/search/)")
 
     company = None
     if cik_input:
@@ -673,7 +663,6 @@ def main():
             unsafe_allow_html=True
         )
 
-    # Timeframe
     preset = st.radio("", ["90d", "1y", "2y", "All time", "Custom"], horizontal=True, label_visibility="collapsed")
     today = datetime.now()
     if preset == "90d":
@@ -694,12 +683,11 @@ def main():
     start_str = start_date.strftime("%Y-%m-%d")
     end_str = end_date.strftime("%Y-%m-%d")
 
-    # Forms
     selected_forms = st.multiselect(
         "",
         list(ALL_FORMS.keys()),
         default=list(ALL_FORMS.keys()),
-        format_func=lambda x: x + " — " + ALL_FORMS[x],
+        format_func=lambda x: x + " -- " + ALL_FORMS[x],
         label_visibility="collapsed",
         placeholder="Select forms to pull...",
     )
@@ -714,7 +702,6 @@ def main():
         st.error("Select at least one form.")
         return
 
-    # If cached result exists and Run wasn't just pressed — show it and stop
     if not run and "cached_result" in st.session_state:
         result = st.session_state["cached_result"]
         filings = st.session_state["cached_filings"]
@@ -732,9 +719,6 @@ def main():
     if not run:
         return
 
-    # ── Pipeline ──
-
-    # 1. Get filings
     with st.spinner("Scanning filings..."):
         filings = get_filings_in_range(company, selected_forms, start_str, end_str)
 
@@ -748,7 +732,6 @@ def main():
         unsafe_allow_html=True
     )
 
-    # 2. Fetch + extract per filing
     extractions = []
     progress = st.progress(0)
 
@@ -769,14 +752,14 @@ def main():
         if not text:
             extractions.append({"error": "no text", "form_type": f["form_type"], "date": f["date"]})
             continue
-        extraction = extract_filing(f, text, company)
+        with st.spinner("Analyzing " + f["form_type"] + " " + f["date"] + " with Claude..."):
+            extraction = extract_filing(f, text, company)
         if "error" in extraction:
             st.warning(f["form_type"] + " " + f["date"] + " extraction error: " + str(extraction["error"])[:120])
         extractions.append(extraction)
 
     progress.empty()
 
-    # 3. Synthesize
     with st.spinner("Synthesizing..."):
         form_types_str = ", ".join(sorted(set(f["form_type"] for f in filings)))
         result = synthesize(company, extractions, f"{start_str} to {end_str}", form_types_str)
@@ -785,16 +768,13 @@ def main():
         st.error("Synthesis failed: " + result["error"])
         return
 
-    # Cache
     st.session_state["cached_result"] = result
     st.session_state["cached_filings"] = filings
     st.session_state["cached_form_types_str"] = form_types_str
 
-    # Render
     st.markdown("---")
     render_brief(result, company, len(filings), form_types_str)
 
-    # Export
     st.markdown("---")
     txt = build_txt(result, company, start_str, end_str, form_types_str)
     st.download_button(
