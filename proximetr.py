@@ -14,6 +14,13 @@ import anthropic
 # ── Config ────────────────────────────────────────────────────────────────────
 
 st.set_page_config(page_title="Proximetr", page_icon="📡", layout="wide")
+st.markdown("""
+    <meta property="og:image" content="https://raw.githubusercontent.com/eddelage/proximetr/main/og_image.jpg">
+    <meta property="og:title" content="proximetr">
+    <meta property="og:description" content="EDGAR + Claude = instant investing intel">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://raw.githubusercontent.com/eddelage/proximetr/main/og_image.jpg">
+""", unsafe_allow_html=True)
 
 EDGAR_HEADERS = {"User-Agent": "Proximetr research@proximetr.io"}
 EDGAR_BASE = "https://data.sec.gov"
