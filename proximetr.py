@@ -14,6 +14,13 @@ import anthropic
 # ── Config ────────────────────────────────────────────────────────────────────
 
 st.set_page_config(page_title="Proximetr", page_icon="📡", layout="wide")
+st.markdown("""
+    <meta property="og:image" content="https://raw.githubusercontent.com/eddelage/proximetr/main/og_image.jpg">
+    <meta property="og:title" content="proximetr">
+    <meta property="og:description" content="EDGAR + Claude = instant investing intel">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://raw.githubusercontent.com/eddelage/proximetr/main/og_image.jpg">
+""", unsafe_allow_html=True)
 
 EDGAR_HEADERS = {"User-Agent": "Proximetr research@proximetr.io"}
 EDGAR_BASE = "https://data.sec.gov"
@@ -308,7 +315,7 @@ Return ONLY valid JSON, no markdown, no preamble:
 }}
 
 Hard rules:
-- companies_mentioned: NO law firms, auditors, transfer agents, custodians, index funds. Only strategic relationships.
+- companies_mentioned: Capture ALL companies, agencies, and organizations mentioned. EXCLUDE only: law firms acting as counsel, auditors, transfer agents, custodians, index funds, and financial intermediaries with no strategic role. INCLUDE: government agencies (NASA, DARPA, DoD, FAA, etc), competitors, partners, investors, customers, vendors -- anything that could be an investing lead or signal a meaningful relationship.
 - insider_transactions: is_discretionary=true ONLY for open-market trades outside a 10b5-1 plan
 - key_facts: ALWAYS capture dollar amounts. EXCLUDE auditor changes, equity plan setup, routine governance.
 - positive_signals: commercial traction only. NOT auditor upgrades or compensation setup.
@@ -347,8 +354,7 @@ Return ONLY valid JSON, no markdown, no preamble.
       "ticker": "string or null",
       "is_private": false,
       "role": "customer|partner|competitor|investor|vendor|acquirer|government",
-      "one_liner": "one sentence on what this relationship means for the investment thesis",
-      "filing_count": 0
+      "one_liner": "one sentence on what this relationship means for the investment thesis"
     }}
   ],
   "insider_activity": ["FIRST STRING: verdict starting with Net signal: [strongly bearish/bearish/neutral/bullish] -- pattern summary. Then 3-4 more strings: crisp bullets -- name, action, dollar amount, discretionary or not, one-line significance. 5 strings max total."],
@@ -361,7 +367,7 @@ Return ONLY valid JSON, no markdown, no preamble.
 
 Rules:
 - growth_insights: 3-5 items grounded in actual filing data. No speculation.
-- key_relationships: Include ALL companies, agencies, and organizations mentioned across the filings. No cap. Rank by importance -- most strategically significant first. Set filing_count to how many filings each entity appeared in. EXCLUDE only: law firms acting as counsel, transfer agents, accountants/auditors, index funds, and pure financial intermediaries with no strategic relationship. Include government agencies (NASA, DARPA, DoD etc), competitors, all partners, all investors, all customers, all vendors.
+- key_relationships: Include ALL strategically relevant companies, agencies, and organizations extracted across all filings. No artificial cap. Rank strictly by investment importance -- most significant relationships first (major customers, named partners with $ values, strategic investors, key competitors, government agencies with active contracts). EXCLUDE only: law firms, auditors, transfer agents, index funds, financial intermediaries with no strategic role.
 - buying_appetite score: 0-3 weak, 4-6 moderate, 7-8 strong, 9-10 very strong.
 - No repetition across sections."""
 
@@ -640,13 +646,7 @@ def main():
 
     # CIK input
     cik_input = st.text_input("", placeholder="Enter company CIK number", label_visibility="collapsed")
-    st.markdown(
-        '<p style="color:#334155;font-size:12px;margin-top:-8px">'
-        'Tickers are not unique and private companies do not have them -- we use the CIK, the SEC permanent ID for every filer. '
-        '<a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany" target="_blank" style="color:#3b82f6;text-decoration:none">Look it up on EDGAR</a>'
-        ' -- search by company name, CIK is at the top of the results.</p>',
-        unsafe_allow_html=True
-    )
+    st.caption("Tickers aren't unique and private companies don't have them -- we use the CIK, the SEC's permanent ID for every filer. [Find it on EDGAR](https://www.sec.gov/edgar/search/) -- search by company name, CIK is at the top of the results.")
 
     company = None
     if cik_input:
@@ -759,7 +759,8 @@ def main():
         if not text:
             extractions.append({"error": "no text", "form_type": f["form_type"], "date": f["date"]})
             continue
-        extraction = extract_filing(f, text, company)
+        with st.spinner("Analyzing " + f["form_type"] + " " + f["date"] + " with Claude..."):
+            extraction = extract_filing(f, text, company)
         if "error" in extraction:
             st.warning(f["form_type"] + " " + f["date"] + " extraction error: " + str(extraction["error"])[:120])
         extractions.append(extraction)
