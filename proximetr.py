@@ -646,7 +646,7 @@ def main():
 
     # CIK input
     cik_input = st.text_input("", placeholder="Enter company CIK number", label_visibility="collapsed")
-    st.caption("Tickers aren't unique and private companies don't have them -- we use the CIK, the SEC's permanent ID for every filer. [Find it on EDGAR](https://www.sec.gov/edgar/search/) -- search by company name, CIK is at the top of the results.")
+    st.caption("Tickers aren't unique and private companies don't have them -- we use the CIK, the SEC's permanent ID for every filer. [Find it on EDGAR](https://www.sec.gov/edgar/search/)")
 
     company = None
     if cik_input:
