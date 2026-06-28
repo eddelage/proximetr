@@ -384,7 +384,7 @@ def extract_filing(filing: dict, text: str, company: dict) -> dict:
     try:
         msg = client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=4096,
+            max_tokens=8192,
             messages=[{"role": "user", "content": prompt}],
         )
         raw = msg.content[0].text.strip()
